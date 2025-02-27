@@ -117,6 +117,11 @@
     
     self.allowCompression = ((NSNumber*)[arguments valueForKey:@"allowCompression"]).boolValue;
     self.loadDataToMemory = ((NSNumber*)[arguments valueForKey:@"withData"]).boolValue;
+
+        /// sony limit select
+    NSInteger limitSelect = ((NSNumber*)[arguments valueForKey:@"limitSelect"]).integerValue;
+    /// end
+
     
     if([call.method isEqualToString:@"any"] || [call.method containsString:@"custom"]) {
         self.allowedExtensions = [FileUtils resolveType:call.method withAllowedExtensions: [arguments valueForKey:@"allowedExtensions"]];
@@ -136,7 +141,9 @@
         }
     } else if([call.method isEqualToString:@"video"] || [call.method isEqualToString:@"image"] || [call.method isEqualToString:@"media"]) {
 #ifdef PICKER_MEDIA
-        [self resolvePickMedia:[FileUtils resolveMediaType:call.method] withMultiPick:isMultiplePick withCompressionAllowed:self.allowCompression];
+        // sony limit select
+        [self resolvePickMedia:[FileUtils resolveMediaType:call.method] withMultiPick:isMultiplePick withLimit: limitSelect withCompressionAllowed:self.allowCompression];
+        // end
 #else
         _result([FlutterError errorWithCode:@"Unsupported picker type"
                                     message:@"Support for the Media picker is not compiled in. Remove the Pod::PICKER_MEDIA=false statement from your Podfile."
@@ -230,7 +237,7 @@
 #endif // PICKER_DOCUMENT
 
 #ifdef PICKER_MEDIA
-- (void) resolvePickMedia:(MediaType)type withMultiPick:(BOOL)multiPick withCompressionAllowed:(BOOL)allowCompression  {
+- (void) resolvePickMedia:(MediaType)type withMultiPick:(BOOL)multiPick withLimit:(NSInteger)limitSelect withCompressionAllowed:(BOOL)allowCompression  {
 
     self.type = type;
     
@@ -241,7 +248,7 @@
         config.preferredAssetRepresentationMode = self.allowCompression ? PHPickerConfigurationAssetRepresentationModeCompatible : PHPickerConfigurationAssetRepresentationModeCurrent;
         
         if(multiPick) {
-            config.selectionLimit = 0;
+            config.selectionLimit = limitSelect;
         }
         
         PHPickerViewController *pickerViewController = [[PHPickerViewController alloc] initWithConfiguration:config];
